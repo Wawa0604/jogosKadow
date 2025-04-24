@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Robo1Controler : MonoBehaviour
-
 {
     // *** Variáveis Públicas (Configuráveis no Inspector da Unity) ***
     public float velocidadeMaxima = 5f;
@@ -112,7 +111,7 @@ public class Robo1Controler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             Vector3 direcaoOposta = -transform.forward;
-            transform.Translate(direcaoOposta * passoParaTrasDistancia, Space.World);
+            rb.MovePosition(rb.position + direcaoOposta * passoParaTrasDistancia);
             velocidadeAtual = 0f;
             acelerando = false;
             tempoEmVelocidadeMaxima = 0f;
@@ -133,9 +132,9 @@ public class Robo1Controler : MonoBehaviour
             cabecaSecundario.localPosition = new Vector3(cabecaSecundario.localPosition.x, posicaoInicialCabeca.y, cabecaSecundario.localPosition.z);
         }
 
-        // *** Aplicar Movimento ***
-        Vector3 movimento = transform.forward * velocidadeAtual * Time.deltaTime;
-        rb.MovePosition(rb.position + movimento);
+        // *** Aplicar Movimento para Frente ***
+        Vector3 movimentoParaFrente = transform.forward * velocidadeAtual * Time.deltaTime;
+        rb.MovePosition(rb.position + movimentoParaFrente);
 
         // *** Lógica do Power-Up ***
         if (powerUpAtivo)

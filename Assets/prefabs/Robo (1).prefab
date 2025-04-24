@@ -144,7 +144,7 @@ GameObject:
   - component: {fileID: 4900254660979161187}
   m_Layer: 0
   m_Name: Robo (1)
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -285,6 +285,8 @@ MonoBehaviour:
   taxaDesaceleracao: 0.2
   cabecaSecundario: {fileID: 4053672965013545758}
   alturaAbaixado: 0.3
+  tempoPowerUpAtivo: 0
+  powerUpAtivo: 0
 --- !u!1 &5818734126652459778
 GameObject:
   m_ObjectHideFlags: 0

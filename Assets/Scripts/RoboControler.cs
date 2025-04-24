@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class RoboControler : MonoBehaviour
-
 {
     // *** Variáveis Públicas (Configuráveis no Inspector da Unity) ***
     public float velocidadeMaxima = 5f;
@@ -117,7 +116,7 @@ public class RoboControler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S))
         {
             Vector3 direcaoOposta = -transform.forward;
-            transform.Translate(direcaoOposta * passoParaTrasDistancia, Space.World);
+            rb.MovePosition(rb.position + direcaoOposta * passoParaTrasDistancia);
             velocidadeAtual = 0f;
             acelerando = false;
             tempoEmVelocidadeMaxima = 0f;
@@ -125,7 +124,7 @@ public class RoboControler : MonoBehaviour
         }
 
         // *** Abaixar a Cabeça ***
-       if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space))
         {
             tempoAbaixadoAtual += Time.deltaTime;
             if (tempoAbaixadoAtual <= tempoMaxAbaixado)

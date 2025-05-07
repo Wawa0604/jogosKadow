@@ -62,17 +62,20 @@ public class LightSwitch : MonoBehaviour
     void Update() // Função Update é chamada a cada frame.
     {
         // Verifica se o jogador está colidindo com o trigger, se não está interagindo com o abajur no momento e se o botão definido no Input Manager com o nome em 'nomeAcao' (tecla Espaço) foi pressionado neste frame.
-        if (colidindo && !interagindoComAbajur && Input.GetAxis("Action")>0)
+        if (colidindo && !interagindoComAbajur && Input.GetKeyDown(KeyCode.Space))
         {
             StartCoroutine(interageAbajur()); // Inicia a execução da corrotina 'interageAbajur', que lida com a lógica de ligar/desligar a luz.
         }
+        // if (Input.GetKeyDown(KeyCode.Space)){
+        //     Debug.Log("roberto");
+        // }
     }
 
     void AtualizarTexto() // Função para atualizar o texto da interface do usuário com base no estado da luz e da colisão com o jogador.
     {
         if (colidindo) // Verifica se o jogador está dentro da área de interação.
         {
-            meuTexto.text = aceso ? "Desligar abajur" : "Ligar abajur"; // Se estiver colidindo, define o texto para "Desligar abajur" se a luz estiver acesa, ou "Ligar abajur" se estiver desligada.
+            meuTexto.text = aceso ? "Desligar luz" : "Ligar luz"; // Se estiver colidindo, define o texto para "Desligar abajur" se a luz estiver acesa, ou "Ligar abajur" se estiver desligada.
         }
     }
 }

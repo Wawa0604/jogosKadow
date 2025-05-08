@@ -1,93 +1,176 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Unity.VisualScripting.ReorderableList;
 using System;
 
 public class GatinhoVida : MonoBehaviour
-
 {
     public int vidas = 3;
-    public TextMeshProUGUI meuTexto;
-    public string textoInicial = "Vidas: ";
+    public TextMeshProUGUI meuTextoVidas; // Para exibir as vidas
+    public TextMeshProUGUI meuTextoFome;   // Para exibir a fome
+    public string textoInicialVidas = "Vidas: ";
+    public string textoInicialFome = "Fome: ";
+    public float fome = 60f;
+    public float fomeMaxima = 60f;
+    public float tempoParaPerderFome = 1f; // Taxa de perda de fome (segundos)
+    public AudioClip somPerderVida;
+    private AudioSource audioSourceGatinho;
+    public AudioClip somComerRatinho;
+    //private AudioSource
+    private bool estaMorto = false;
 
-    // Evento para notificar quando uma vida é perdida
     public delegate void VidaPerdidaAction(int vidasRestantes);
     public static event VidaPerdidaAction OnVidaPerdida;
 
+    public delegate void GatinhoMorreuAction();
+    public static event GatinhoMorreuAction OnGatinhoMorreu;
+
     void Start()
     {
-        // Tenta encontrar o componente TextMeshProUGUI pelo nome
-        meuTexto = GameObject.Find("VidaGatinho").GetComponent<TextMeshProUGUI>();
+        meuTextoVidas = GameObject.Find("VidaGatinho").GetComponent<TextMeshProUGUI>();
+        meuTextoFome = GameObject.Find("FomeGatinho").GetComponent<TextMeshProUGUI>(); // Encontre o texto da fome
 
-        // Se o componente de texto não for encontrado, exibe um aviso
-        if (meuTexto == null)
+        if (meuTextoVidas == null || meuTextoFome == null)
         {
-            Debug.LogWarning("Componente TextMeshProUGUI 'VidaGatinho' não encontrado na cena!");
+            Debug.LogWarning("Componente TextMeshProUGUI 'VidaGatinho' ou 'FomeGatinho' não encontrado na cena!");
         }
 
-        // Atualiza o texto inicial das vidas
-        AtualizarTexto();
-
-        // Se inscreve no evento de perda de vida para atualizar o texto
-        OnVidaPerdida += AtualizarTextoExterno;
-    }
-
-    // Atualiza o texto da interface do usuário com a contagem de vidas
-    private void AtualizarTexto()
-    {
-        if (meuTexto != null)
+        audioSourceGatinho = GetComponent<AudioSource>();
+        if (audioSourceGatinho == null)
         {
-            meuTexto.text = textoInicial + vidas.ToString();
+            audioSourceGatinho = gameObject.AddComponent<AudioSource>();
         }
+
+        AtualizarTextoVidas();
+        AtualizarTextoFome();
     }
 
-    // Função para ser chamada externamente quando uma vida é perdida
-    private void AtualizarTextoExterno(int vidasRestantes)
+    void Update()
     {
-        vidas = vidasRestantes;
-        AtualizarTexto();
+        if (estaMorto) return;
+
+        // Diminui a fome ao longo do tempo
+        fome -= Time.deltaTime;
+
+        // Garante que a fome não seja menor que zero
+        fome = Mathf.Max(0f, fome);
+
+        // Atualiza o texto da fome na tela
+        AtualizarTextoFome();
+
+        // Verifica se o gato morreu de fome
+        if (fome <= 0)
+        {
+            Debug.Log("Gatinho morreu de fome!");
+            estaMorto = true;
+            if (OnGatinhoMorreu != null)
+            {
+                OnGatinhoMorreu();
+            }
+            Time.timeScale = 0f;
+            if (GetComponent<MovimentoGatinho>() != null)
+            {
+                GetComponent<MovimentoGatinho>().enabled = false;
+            }
+        }
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
+        if (estaMorto) return;
+
         if (collision.gameObject.CompareTag("Aranha"))
         {
             PerderVida();
+        }
+        else if (collision.gameObject.CompareTag("Ratinho"))
+        {
+            ComerRatinho(collision.gameObject);
         }
     }
 
     public void PerderVida()
     {
+        if (estaMorto) return;
+
         vidas--;
         Debug.Log("Gatinho perdeu uma vida! Vidas restantes: " + vidas);
 
-        // Notifica outros scripts sobre a perda de vida
         if (OnVidaPerdida != null)
         {
             OnVidaPerdida(vidas);
         }
 
-        // Lógica adicional quando as vidas acabam (opcional)
-        if (vidas <= 0)
+        AtualizarTextoVidas();
+        TocarSomPerderVida();
+
+        if (vidas <= 0 && !estaMorto)
         {
             Debug.Log("Gatinho morreu!");
-            // Adicione aqui a lógica de game over ou respawn
-            Destroy(gameObject); // Por enquanto, destrói o gatinho
+            estaMorto = true;
+            if (OnGatinhoMorreu != null)
+            {
+                OnGatinhoMorreu();
+            }
+            Time.timeScale = 0f;
+            if (GetComponent<MovimentoGatinho>() != null)
+            {
+                GetComponent<MovimentoGatinho>().enabled = false;
+            }
         }
     }
 
-    // Função para adicionar vidas (se necessário)
-    public void AdicionarVida(int vidasGanhas)
+    void ComerRatinho(GameObject ratinhoComido)
     {
-        vidas += vidasGanhas;
-        Debug.Log("Gatinho ganhou " + vidasGanhas + " vida(s)! Vidas restantes: " + vidas);
-        AtualizarTexto();
+        fome = fomeMaxima; // Restaura a fome para o máximo
+        AtualizarTextoFome();
+        Destroy(ratinhoComido);
+        Debug.Log("Gatinho comeu o ratinho! Fome restaurada.");
+        TocarSomComerRatinho(); // Chamando a função para tocar o som ao comer o ratinho
+        // Adicione aqui a lógica para contar ratinhos comidos, se necessário
     }
 
-    // Garante que o evento seja desinscrito quando o objeto é destruído
+    void AtualizarTextoVidas()
+    {
+        if (meuTextoVidas != null)
+        {
+            meuTextoVidas.text = textoInicialVidas + vidas.ToString();
+        }
+    }
+
+    void AtualizarTextoFome()
+    {
+        if (meuTextoFome != null)
+        {
+            meuTextoFome.text = textoInicialFome + Mathf.RoundToInt(fome).ToString();
+        }
+    }
+
+    void TocarSomPerderVida()
+    {
+        if (audioSourceGatinho != null && somPerderVida != null)
+        {
+            audioSourceGatinho.PlayOneShot(somPerderVida);
+        }
+    }
+
+    void TocarSomComerRatinho()
+    {
+        if (audioSourceGatinho != null && somComerRatinho != null)
+        {
+            audioSourceGatinho.PlayOneShot(somComerRatinho);
+        }
+    }
+
     private void OnDestroy()
     {
-        OnVidaPerdida -= AtualizarTextoExterno;
+        OnVidaPerdida -= OnVidaPerdidaHandler;
+    }
+
+    private void OnVidaPerdidaHandler(int vidasRestantes)
+    {
+        vidas = vidasRestantes;
+        AtualizarTextoVidas();
+        TocarSomPerderVida();
     }
 }

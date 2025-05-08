@@ -9,9 +9,12 @@ public class aranhaFollow : MonoBehaviour
     public bool olharParaJogador = true;
     public float rotacaoVelocidade = 5f;
     private bool colidindoInicial = false; // Usado para detectar a primeira entrada no trigger
+    public float tempoDeVidaPerseguindo = 5f; // Tempo em segundos após o qual a aranha morre
+    public GameObject efeitoMorte; // Prefab de um efeito visual ao morrer (opcional)
 
     private Rigidbody2D rb;
     private bool seguindo = false;
+    private float tempoInicioPerseguicao;
 
     void Start()
     {
@@ -51,16 +54,18 @@ public class aranhaFollow : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            colidindoInicial = false; // O jogador saiu do raio de ativação (mas a aranha pode continuar seguindo)
+            colidindoInicial = false;
         }
     }
 
     void Update()
     {
         // Se o jogador estiver (ou esteve) dentro do raio inicial e pressionar Espaço, inicie a perseguição
-        if (colidindoInicial && Input.GetKeyDown(KeyCode.Space))
+        if (colidindoInicial && Input.GetKeyDown(KeyCode.Space) && !seguindo)
         {
             seguindo = true;
+            tempoInicioPerseguicao = Time.time; // Registra o tempo de início da perseguição
+            StartCoroutine(AutodestruirAposTempo());
         }
 
         // Se estiver seguindo, move e rotaciona
@@ -76,13 +81,6 @@ public class aranhaFollow : MonoBehaviour
         {
             rb.velocity = Vector2.zero; // Para de se mover se não estiver seguindo
         }
-
-        // Adicione aqui outra condição para parar de seguir, se necessário
-        // Por exemplo, se o jogador pressionar outra tecla:
-        // if (seguindo && Input.GetKeyDown(KeyCode.Q))
-        // {
-        //     seguindo = false;
-        // }
     }
 
     void FixedUpdate()
@@ -121,5 +119,22 @@ public class aranhaFollow : MonoBehaviour
             Quaternion rotacaoAlvo = Quaternion.AngleAxis(angulo - 90, Vector3.forward);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacaoAlvo, rotacaoVelocidade * Time.deltaTime);
         }
+    }
+
+    IEnumerator AutodestruirAposTempo()
+    {
+        yield return new WaitForSeconds(tempoDeVidaPerseguindo);
+        Morrer();
+    }
+
+    void Morrer()
+    {
+        // Lógica de morte da aranha
+        Debug.Log("Aranha morreu!");
+        if (efeitoMorte != null)
+        {
+            Instantiate(efeitoMorte, transform.position, Quaternion.identity);
+        }
+        Destroy(gameObject); // Destrói o GameObject da aranha
     }
 }

@@ -6,39 +6,38 @@ using UnityEngine.UI;
 
 public class Play : MonoBehaviour
 {
-    private Button cara;
-    private Button coroa;
-    private Button play;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        cara = GameObject.Find("Cara").GetComponent<Button>();
-        coroa = GameObject.Find("Coroa").GetComponent<Button>();
-        play = GameObject.Find("Play").GetComponent<Button>(); // Corrigido para encontrar o botão "Play"
-
-        cara.gameObject.SetActive(false);
-        coroa.gameObject.SetActive(false);
-        
-    }
+    [SerializeField] private Button playButton; // Atribua o botão "Play" no Inspector
 
     public void BotaoPressionado()
     {
-        Debug.Log("O botão Play foi pressionado!");
-        // Ativa os botões Cara e Coroa
-        if (cara != null)
+        Debug.Log("O botão Play foi pressionado (script Play).");
+        // Chama a função IniciarCaraCoroa no GameManager
+        if (GameManager.Instance != null)
         {
-            cara.gameObject.SetActive(true);
+            GameManager.Instance.IniciarCaraCoroa();
         }
-        if (coroa != null)
+        else
         {
-            coroa.gameObject.SetActive(true);
+            Debug.LogError("Instância do GameManager não encontrada!");
         }
 
         // Desativa (faz sumir) o botão Play
-        if (play != null)
+        if (playButton != null)
         {
-            play.gameObject.SetActive(false);
+            playButton.gameObject.SetActive(false);
         }
+    }
+
+    void Start()
+    {
+        // Garante que o botão Play esteja atribuído
+        if (playButton == null)
+        {
+            Debug.LogError("Botão 'Play' não atribuído no script Play!");
+            return;
+        }
+
+        // Adiciona o listener diretamente aqui
+        playButton.onClick.AddListener(BotaoPressionado);
     }
 }
